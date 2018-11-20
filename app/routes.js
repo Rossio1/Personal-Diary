@@ -11,9 +11,15 @@ module.exports = function(app, passport, db) {
     app.get('/profile', isLoggedIn, function(req, res) {
         db.collection('messages').find().toArray((err, result) => {
           if (err) return console.log(err)
+          let notes = []
+          for(let i = 0; i < result.length; i++){
+            if(req.user.local.email == result[i].name){
+              notes.push(result[i])
+            }
+          }
           res.render('profile.ejs', {
             user : req.user,
-            messages: result
+            messages: notes
           })
         })
     });
@@ -27,7 +33,9 @@ module.exports = function(app, passport, db) {
 // message board routes ===============================================================
 
     app.post('/messages', (req, res) => {
-      db.collection('messages').save({name: req.body.name, msg: req.body.msg, thumbUp: 0, thumbDown:0}, (err, result) => {
+      if(!req.body.msg) return res.redirect('/')
+      console.log(req.body)
+      db.collection('messages').save({name: req.body.name, msg: req.body.msg, date: req.body.date}, (err, result) => {
         if (err) return console.log(err)
         console.log('saved to database')
         res.redirect('/profile')
